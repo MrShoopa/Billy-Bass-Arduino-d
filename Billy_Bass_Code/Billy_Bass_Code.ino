@@ -1,16 +1,25 @@
 /*
-  Make a DC Motor Move to Sound.
-   This example code is in the public domain.
+  Make a set of motors move to sound.
+  Uses an Arduino Uno paired with the Adafruit Motor Shield v2.
+  Written with the larger Big Mouth Billy Bass (or any animatronic) in mind.
+   
+   Modified by Joe Villegas on July 2018:
+   -Defined all motors
+   -Set variables (Ex: speed and sensitivity) for easier tweaking
+   -Added support for the third motor in some Basses
+   -Included serial printouts for debugging and audio reading monitoring
+   
+   Original information:
    Created by Donald Bell, Maker Project Lab (2016).
    Based on Sound to Servo by Cenk Ã–zdemir (2012)
    and DCMotorTest by Adafruit
 */
 
-// include the Adafruit motor shield library
+//Libraries
 #include <Wire.h>
 #include <QueueArray.h>
 #include <Adafruit_MotorShield.h>
-#include "utility/Adafruit_MS_PWMServoDriver.h"
+#include "utility/Adafruit_MS_PWMServoDriver.h" //TODO: Investigate body (3rd) motor
 
 
 
@@ -19,47 +28,48 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 // Or, create it with a different I2C address (say for stacking)
 // Adafruit_MotorShield AFMS = Adafruit_MotorShield(0x61);
 
-// Select which 'port' M1, M2, M3 or M4. In this case, M1 for mouth and M2 for tail
+// Select which 'port' M1, M2, M3 or M4.
 Adafruit_DCMotor *mouthMotor = AFMS.getMotor(1);
-Adafruit_DCMotor *headMotor = AFMS.getMotor(2);
+Adafruit_DCMotor *bodyMotor = AFMS.getMotor(2);
 Adafruit_DCMotor *tailMotor = AFMS.getMotor(3);
 
 // Some other Variables we need
 int SoundInPin = A1;
-int LedPin = 12; //in case you want an LED to activate while mouth moves
+int LedPin = 12;                      //in case you want an LED to activate while mouth moves
 
 //Base system variables
 int afmsFreq = 1600; //Default is 1600 (1.6kHz)
 int audioSensitivity = 1023;
-int motorDelay = 0;
+
 
 //Audio threshold variables
-boolean headMovementEnabled = false; //TODO: head motor is unable to move the head itself (reglue?)
-int staticThreshold = 1;
+boolean headMovementEnabled = false;  //TODO: head motor is unable to move the head itself (reglue?)
+int staticThreshold = 1;              //To leave out any unwanted movement due to static
 int mouthAudioThreshold = 40;
 int tailAudioThreshold = 5;
 
 //Motor speed variables
+int motorDelay = 0;                   //Delay between sound readings and motor movements
 int mouthMotorSpeed = 200;
-int headMotorSpeed = 30;
+int bodyMotorSpeed = 30;
 int tailMotorSpeed = 200;
 
 
 
-//Handled all by system (Don't touch)
+//Handled all by system (Best to not touch)
 boolean audioDetected = false;
 int audioLastDetected = 0;
 QueueArray <int> audioReadingQueue;
-boolean headMoved;
+boolean bodyMoved;
 
 
-// the setup routine runs once when you press reset:
+//The setup routine runs once when you press reset:
 void setup() {
-  Serial.begin(9600);           // set up Serial library at 9600 bps
+  Serial.begin(9600);                 // set up Serial library at 9600 bps
   Serial.println("sup b");
 
   AFMS.begin(afmsFreq);
-  if (afmsFreq == 0 || afmsFreq == 1600) {
+  if (afmsFreq == 1600) {
     Serial.println("Adafruit Motor Shield booted");
   } else {
     Serial.println("AFMS enabled with frequency of " + String(afmsFreq));
@@ -68,7 +78,7 @@ void setup() {
   // Set the speed to start, from 0 (off) to 255 (max speed)
 
   //mouth motor
-  mouthMotor->setSpeed(0);
+  mouthMotor->setSpeed(mouthMotorSpeed);
   Serial.println("Mouth motor speed set to " + String(mouthMotorSpeed) + ".");
   mouthMotor->run(FORWARD);  // turn on motor
   Serial.println("Mouth motor turned on!");
@@ -78,16 +88,16 @@ void setup() {
   pinMode(LedPin, OUTPUT);
 
   //head motor
-  headMotor->setSpeed(0);
-  Serial.println("Head motor speed set to " + String(headMotorSpeed) + ".");
-  headMotor->run(FORWARD); // turn on motor
+  bodyMotor->setSpeed(bodyMotorSpeed);
+  Serial.println("Head motor speed set to " + String(bodyMotorSpeed) + ".");
+  bodyMotor->run(FORWARD); // turn on motor
   Serial.println("Head motor turned on!");
 
-  headMotor->run(RELEASE);
+  bodyMotor->run(RELEASE);
   pinMode(SoundInPin, INPUT);
 
   //tail motor
-  tailMotor->setSpeed(0);
+  tailMotor->setSpeed(tailMotorSpeed);
   Serial.println("Tail motor speed set to " + String(tailMotorSpeed) + ".");
   tailMotor->run(FORWARD); // turn on motor
   Serial.println("Tail motor turned on!");
@@ -103,7 +113,7 @@ void loop() {
 
   //Reading values from analog pin
   int sensorValue = analogRead(SoundInPin);
-  sensorValue = map(sensorValue, 0, 1023, 0, audioSensitivity); // We Map it here down to the possible range of  movement.
+  sensorValue = map(sensorValue, 0, 1023, 0, audioSensitivity); //Sets the range of audio readings
   
   Serial.println("Audio - Input value: " + String(sensorValue));
 
@@ -114,7 +124,7 @@ void loop() {
   if (headMovementEnabled) {
     //Gathering history
     audioReadingQueue.enqueue(sensorValue);
-      //Serial.println("QUEUE SIZE: " + String(audioReadingQueue.count()));
+      //Serial.println("QUEUE SIZE: " + String(audioReadingQueue.count()));     //DEBUG
     if (audioReadingQueue.count() == 50) {
       if (audioReadingQueue.peek() > staticThreshold) {
         audioLastDetected = 0;
@@ -124,45 +134,49 @@ void loop() {
         audioDetected = false;
       }
       audioReadingQueue.pop();
-      //Serial.println("Audio - Last detected " + String(audioLastDetected) + " steps ago");
+      //Serial.println("Audio - Last detected " + String(audioLastDetected) + " steps ago");      //DEBUG
     }
-    //Moving heads according to case
-    if (audioLastDetected < 50 && headMoved == false) {
-      headMotor->run(FORWARD);
-      for (i = headMotorSpeed; i < 255; i++) {
-        headMotor->setSpeed(i);
+    //Moving head according to specific scenario
+    if (audioLastDetected < 50 && bodyMoved == false) {
+      bodyMotor->run(FORWARD);
+      for (i = bodyMotorSpeed; i < 255; i++) {
+        bodyMotor->setSpeed(i);
       }
-      headMotor->setSpeed(0);
-      headMoved = true;
+      bodyMotor->setSpeed(0);
+      bodyMoved = true;
 
       Serial.println("I'm ALIVEEEEE");
     } else if (audioLastDetected < 50) {
+      
       //hold position
-    } else if (headMoved == true) {
-      headMotor->run(BACKWARD);
-      for (i = headMotorSpeed; i < 255; i++) {
-        headMotor->setSpeed(i);
+      
+    } else if (bodyMoved == true) {
+      bodyMotor->run(BACKWARD);
+      for (i = bodyMotorSpeed; i < 255; i++) {
+        bodyMotor->setSpeed(i);
       }
-      headMotor->setSpeed(0);
-      headMoved = false;
+      bodyMotor->setSpeed(0);
+      bodyMoved = false;
 
       Serial.println("Imma be sleepin");
     } else {
+      
       //hold position
+      
     }
   }
 
   //Active movement
-  if (sensorValue > mouthAudioThreshold) { // to cut off some static readings
-    delay(motorDelay);  // a static delay to smooth things out...
+  if (sensorValue > mouthAudioThreshold) {
+    delay(motorDelay);
     // now move the motor
     mouthMotor->run(FORWARD);
     for (i = mouthMotorSpeed; i < 255; i++) {
       mouthMotor->setSpeed(i);
     }
 
-    if (sensorValue > tailAudioThreshold) { // to cut off some static readings
-      delay(motorDelay);  // a static delay to smooth things out...
+    if (sensorValue > tailAudioThreshold) {
+      delay(motorDelay);
       // now move the motor
       tailMotor->run(BACKWARD);
       for (i = tailMotorSpeed; i < 255; i++) {
@@ -170,20 +184,16 @@ void loop() {
       }
     }
 
-    analogWrite(LedPin, sensorValue);
-    // and do that move in this delay time
+    analogWrite(LedPin, sensorValue); //Brightens LED according to immediate audio strength
 
     mouthMotor->run(RELEASE);
     tailMotor->run(RELEASE);
     delay(motorDelay);
   }
 
-
-
   // Done.
   // turn off the led again.
   analogWrite(LedPin, 0);
   // and this repeats all the time.
 }
-
 
