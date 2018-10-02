@@ -22,6 +22,9 @@
 #include "utility/Adafruit_MS_PWMServoDriver.h" //TODO: Investigate body (3rd) motor
 
 
+//Funsies (ENABLE AT RISK (make sure you have power)
+boolean modeFrantic = false;
+int speedFrantic = 254;
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
@@ -54,8 +57,6 @@ int mouthMotorSpeed = 200;
 int bodyMotorSpeed = 30;
 int tailMotorSpeed = 200;
 
-
-
 //Handled all by system (Best to not touch)
 boolean audioDetected = false;
 int audioLastDetected = 0;
@@ -65,6 +66,11 @@ boolean bodyMoved;
 
 //The setup routine runs once when you press reset:
 void setup() {
+  //Pre-setup tweaks
+  if (modeFrantic == true){
+  setupFrantic();
+}
+  
   Serial.begin(9600);                 // set up Serial library at 9600 bps
   Serial.println("sup b");
 
@@ -195,4 +201,11 @@ void loop() {
   // turn off the led again.
   analogWrite(LedPin, 0);
   // and this repeats all the time.
+}
+
+void setupFrantic() {
+  int motorDelay = 0;                  
+  int mouthMotorSpeed = speedFrantic;
+  int bodyMotorSpeed = speedFrantic;
+  int tailMotorSpeed = speedFrantic;
 }
