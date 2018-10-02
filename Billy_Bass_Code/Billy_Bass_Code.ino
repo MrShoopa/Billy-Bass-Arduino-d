@@ -21,6 +21,9 @@
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h" //TODO: Investigate body (3rd) motor
 
+//SETUP
+boolean legacyFish = true; //For older models that incorporate three motors
+
 
 //Funsies (ENABLE AT RISK (make sure you have power)
 boolean modeFrantic = false;
@@ -67,6 +70,7 @@ boolean bodyMoved;
 //The setup routine runs once when you press reset:
 void setup() {
   //Pre-setup tweaks
+  
   if (modeFrantic == true){
   setupFrantic();
 }
@@ -103,6 +107,7 @@ void setup() {
   pinMode(SoundInPin, INPUT);
 
   //tail motor
+  if (legacyFish == true) {
   tailMotor->setSpeed(tailMotorSpeed);
   Serial.println("Tail motor speed set to " + String(tailMotorSpeed) + ".");
   tailMotor->run(FORWARD); // turn on motor
@@ -110,6 +115,7 @@ void setup() {
 
   tailMotor->run(RELEASE);
   pinMode(SoundInPin, INPUT);
+  }
 
   Serial.println("Billy Bass is GO!");
 }
