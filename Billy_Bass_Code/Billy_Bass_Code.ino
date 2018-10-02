@@ -6,7 +6,7 @@
    Modified by Joe Villegas on July 2018:
    -Defined all motors
    -Set variables (Ex: speed and sensitivity) for easier tweaking
-   -Added support for the third motor in some Basses
+   -Added support for the third motor in some Basses (Disable/Enable third motor use)
    -Included serial printouts for debugging and audio reading monitoring
    
    Original information:
