@@ -8,6 +8,9 @@
    -Set variables (Ex: speed and sensitivity) for easier tweaking
    -Added support for the third motor in some Basses (Disable/Enable third motor use)
    -Included serial printouts for debugging and audio reading monitoring
+
+   August 2018:
+   -Added frantic mode (Maximum speed of motor movement, requires lots of power)
    
    Original information:
    Created by Donald Bell, Maker Project Lab (2016).
