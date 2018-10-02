@@ -81,7 +81,7 @@ void setup() {
   mouthMotor->setSpeed(mouthMotorSpeed);
   Serial.println("Mouth motor speed set to " + String(mouthMotorSpeed) + ".");
   mouthMotor->run(FORWARD);  // turn on motor
-  Serial.println("Mouth motor turned on!");
+  Serial.println("Mouth motor connected, attempted to move");
 
   mouthMotor->run(RELEASE);
   pinMode(SoundInPin, INPUT);
@@ -91,7 +91,7 @@ void setup() {
   bodyMotor->setSpeed(bodyMotorSpeed);
   Serial.println("Head motor speed set to " + String(bodyMotorSpeed) + ".");
   bodyMotor->run(FORWARD); // turn on motor
-  Serial.println("Head motor turned on!");
+  Serial.println("Head motor connected, attempted to move");
 
   bodyMotor->run(RELEASE);
   pinMode(SoundInPin, INPUT);
@@ -100,7 +100,7 @@ void setup() {
   tailMotor->setSpeed(tailMotorSpeed);
   Serial.println("Tail motor speed set to " + String(tailMotorSpeed) + ".");
   tailMotor->run(FORWARD); // turn on motor
-  Serial.println("Tail motor turned on!");
+  Serial.println("Tail motor connected, attempted to move");
 
   tailMotor->run(RELEASE);
   pinMode(SoundInPin, INPUT);
@@ -196,4 +196,3 @@ void loop() {
   analogWrite(LedPin, 0);
   // and this repeats all the time.
 }
-
