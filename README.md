@@ -1,4 +1,4 @@
-# Billy Bass Arduino'ed
+# Billy Bass Arduino'd
 
 Based on Donald Bell's Instructable.
 
