@@ -1,0 +1,6 @@
+{
+    "port": "COM3",
+    "board": "arduino:avr:uno",
+    "programmer": "AVRISP mkII",
+    "sketch": "Billy_Bass_Code\\Billy_Bass_Code.ino"
+}
