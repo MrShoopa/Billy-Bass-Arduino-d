@@ -28,22 +28,24 @@
 boolean legacyFish = true; //For older models that incorporate three motors
 //* Motor speed variables
 int motorDelay = 0; //Delay between sound readings and motor movements
-int mouthMotorSpeed = 3000;
-int headMotorSpeed = 1000;
-int tailMotorSpeed = 500;
+//* Range: 1 - 255. Lower makes most movement.
+int mouthMotorSpeed = 100;
+int headMotorSpeed = 100;
+int tailMotorSpeed = 25;
 // Funsies (ENABLE AT RISK (make sure you have power)
 boolean modeFrantic = false;
+int logDelay = 10;
 //* SETUP finished
 
 //Base system variables
 int afmsFreq = 1600; //Default is 1600 (1.6kHz)
-int audioSensitivity = 12345;
+int audioSensitivity = 1023;
 
 //Audio threshold variables
 boolean headMovementEnabled = true; //TODO: head motor is unable to move the head itself (reglue?)
 int staticThreshold = 1;            //To leave out any unwanted movement due to static
-int mouthAudioThreshold = 1;
-int tailAudioThreshold = 20;
+int mouthAudioThreshold = 10;
+int tailAudioThreshold = 25;
 
 //* ---- This section below don't touch
 
@@ -68,6 +70,7 @@ QueueArray<int> audioReadingQueue;
 boolean bodyMoved;
 
 int speedFrantic = 254;
+int ping = 0;
 
 //* ---- This section above don't touch ---
 
@@ -82,6 +85,7 @@ void setup()
     mouthMotorSpeed = speedFrantic;
     headMotorSpeed = speedFrantic;
     tailMotorSpeed = speedFrantic;
+    Serial.println("hello");
   }
 
   Serial.begin(9600); // set up Serial library at 9600 bps
@@ -127,7 +131,6 @@ void setup()
     Serial.println("Tail motor connected, attempted to move");
 
     tailMotor->run(RELEASE);
-    pinMode(SoundInPin, INPUT);
   }
 
   Serial.println("Billy Bass is GO!");
@@ -139,9 +142,17 @@ void loop()
 
   //Reading values from analog pin
   int sensorValue = analogRead(SoundInPin);
-  sensorValue = map(sensorValue, 0, 1023, 0, audioSensitivity); //Sets the range of audio readings
+  sensorValue = map(sensorValue, 0, 256, 0, audioSensitivity); //Sets the range of audio readings
 
-  Serial.println("Audio - Input value: " + String(sensorValue));
+  if (ping >= logDelay)
+  {
+    Serial.println("Audio - Input value: " + String(sensorValue));
+    ping = 0;
+  }
+  else
+  {
+    ping++;
+  }
 
   //int LEDValue = map(sensorValue,0,512,0,255); // we Map another value of this for LED that can be a integer betwen 0..255
   //int MoveDelayValue = map(sensorValue,0,255,0,sensorValue);  // note normally the 512 is 1023 because of analog reading should go so far, but I changed that to get better readings.
